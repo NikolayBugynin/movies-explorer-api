@@ -3,7 +3,7 @@ movies-explorer-backend
 
 ## Ссылки на проект
 
-IP 51.250.79.172
+IP 158.160.104.120
 
 Backend https://api.hello.nomoredomainsmonster.ru
 
