@@ -1,6 +1,4 @@
-require('dotenv').config();
 const express = require('express');
-const process = require('process');
 const mongoose = require('mongoose');
 const { errors } = require('celebrate');
 const helmet = require('helmet');
@@ -9,17 +7,14 @@ const cors = require('./middlewares/cors');
 const handleErrors = require('./middlewares/handleErrors');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 const limiter = require('./middlewares/limiter');
-
-const { PORT = 3000 } = process.env;
 const app = express();
+
+const { CONNECT_DB_PATH, PORT } = require('./utils/config');
 
 mongoose.set({ runValidators: true, autoIndex: true });
 
 // Подключаемся к серверу MongoDB
-mongoose.connect('mongodb://127.0.0.1:27017/bitfilmsdb')
-  .catch((err) => {
-    console.log(err);
-  });
+mongoose.connect(CONNECT_DB_PATH);
 
 app.use(cors);
 
@@ -46,4 +41,4 @@ app.use(errors());
 // Middleware для обработки ошибок
 app.use(handleErrors);
 
-app.listen(PORT);
+app.listen(PORT, () => { console.log(`server has been started, your port ${PORT}`); });

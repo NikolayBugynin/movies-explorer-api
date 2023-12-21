@@ -1,12 +1,9 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const BadRequest = require('../errors/BadRequest');
-const ConflictError = require('../errors/ConflictError');
-const NotFoundError = require('../errors/NotFoundError');
-const { STATUS_CODE_OBJECT_CREATED } = require('../utils/constants');
-
-const { NODE_ENV, JWT_SECRET } = process.env;
+const { InvalidError, RegisterError, NotFoundError} = require('../errors');
+const { HTTP_STATUS_CREATED, MONGODB_CONFLICT } = require('../utils/constants');
+const { JWT_SECRET } = require('../utils/config');
 
 module.exports.getUser = (req, res, next) => {
   User.findById(req.params.userId)
@@ -14,7 +11,7 @@ module.exports.getUser = (req, res, next) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'CastError') {
-        return next(new BadRequest('Переданы некорректные данные'));
+        return next(new InvalidError('Переданы некорректные данные'));
       }
       return next(err);
     });
@@ -28,17 +25,17 @@ module.exports.createUser = (req, res, next) => {
       password: hash,
       name,
     }))
-    .then((user) => res.status(STATUS_CODE_OBJECT_CREATED).send({
+    .then((user) => res.status(HTTP_STATUS_CREATED).send({
       _id: user._id,
       name: user.name,
       email: user.email,
     }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return next(new BadRequest('Переданы некорректные данные'));
+        return next(new InvalidError('Переданы некорректные данные'));
       }
       if (err.code === 11000) {
-        return next(new ConflictError('Пользователь с таким именем уже существует'));
+        return next(new RegisterError('Пользователь с таким именем уже существует'));
       }
       return next(err);
     });
@@ -57,8 +54,11 @@ module.exports.updateUser = (req, res, next) => {
     .orFail(() => { throw new NotFoundError('Пользователь по указанному _id не найден'); })
     .then((user) => res.send(user))
     .catch((err) => {
+      if (err.code === MONGODB_CONFLICT) {
+        return next(new RegisterError());
+      }
       if (err.name === 'ValidationError') {
-        return next(new BadRequest('Переданы некорректные данные'));
+        return next(new InvalidError('Переданы некорректные данные'));
       }
       return next(err);
     });
@@ -69,8 +69,20 @@ module.exports.login = (req, res, next) => {
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'some-secret-key', { expiresIn: '7d' });
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
       return res.send({ token });
     })
     .catch(next);
 };
+
+module.exports.signOut = async (req, res, next) => {
+  try {
+    res.clearCookie('jwt');
+    return res.send({ message: 'Вы успешно вышли из аккаунта' });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+
+
