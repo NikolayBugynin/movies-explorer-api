@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { InvalidError, RegisterError, NotFoundError} = require('../errors');
+const { InvalidError, RegisterError, NotFoundError } = require('../errors');
 const { HTTP_STATUS_CREATED, MONGODB_CONFLICT } = require('../utils/constants');
 const { JWT_SECRET } = require('../utils/config');
 
@@ -83,6 +83,3 @@ module.exports.signOut = async (req, res, next) => {
     return next(error);
   }
 };
-
-
-

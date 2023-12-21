@@ -1,9 +1,9 @@
 const Movie = require('../models/movie');
 const { HTTP_STATUS_CREATED } = require('../utils/constants');
-const { InvalidError, NotFoundError, ForbiddenError} = require('../errors');
+const { InvalidError, NotFoundError, ForbiddenError } = require('../errors');
 
 module.exports.getMovies = (req, res, next) => {
-  Movie.find({owner: req.user._id})
+  Movie.find({ owner: req.user._id })
     .then((movies) => {
       res.send(movies);
     })
