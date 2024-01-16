@@ -6,7 +6,7 @@ const { HTTP_STATUS_CREATED, MONGODB_CONFLICT } = require('../utils/constants');
 const { JWT_SECRET } = require('../utils/config');
 
 module.exports.getUser = (req, res, next) => {
-  User.findById(req.params.userId)
+  User.findById(req.user._id)
     .orFail(() => { throw new NotFoundError('Пользователь по указанному _id не найден'); })
     .then((user) => res.send(user))
     .catch((err) => {
